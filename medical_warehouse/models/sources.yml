@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw  # matches your Postgres schema
+    tables:
+      - name: yolo_detections
+      - name: channel_mapping
