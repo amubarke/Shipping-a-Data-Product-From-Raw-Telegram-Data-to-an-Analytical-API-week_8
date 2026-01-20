@@ -72,6 +72,7 @@ python yolov8_enrichment/detect_objects.py
 * Define operations (ops) for scraping, loading, transforming, and enrichment.
 * Example pipeline.py structure:
 
+```
 from dagster import job, op
 import subprocess
 
@@ -97,8 +98,9 @@ def telegram_pipeline():
     load = load_raw_to_postgres()
     dbt = run_dbt_transformations()
     yolo = run_yolo_enrichment()
-
-    # Define execution order
+    
+```
+### Define execution order
     load.after(scrape)
     dbt.after(load)
     yolo.after(dbt)
