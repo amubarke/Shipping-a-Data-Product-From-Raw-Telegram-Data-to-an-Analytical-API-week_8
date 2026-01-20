@@ -23,83 +23,93 @@ This project is an **end-to-end data pipeline** designed to extract, transform, 
 
 ## Project Structure
 
-```
 project-root/
 ├── data_lake/
-│   ├── raw/
-│   │   ├── telegram_messages/
-│   │   │   └── channel_name/YYYY_MM_DD.json
-│   │   └── metadata/
-│   └── logs/
+│ ├── raw/
+│ │ ├── telegram_messages/
+│ │ │ └── channel_name/YYYY_MM_DD.json
+│ │ └── metadata/
+│ └── logs/
 ├── dbt_project/
-│   ├── models/
-│   └── macros/
+│ ├── models/
+│ └── macros/
 ├── yolov8_enrichment/
-│   └── detect_objects.py
+│ └── detect_objects.py
 ├── api/
-│   └── main.py
+│ └── main.py
 ├── dagster_pipeline/
-│   └── pipeline.py
+│ └── pipeline.py
+├── scrapers/
+│ └── telegram_scraper.py
 └── README.md
-```
 
-## Features
 
-1. **Data Scraping:** Collects messages and images from public Telegram channels.
-2. **Data Lake:** Stores raw, immutable data partitioned by channel and date.
-3. **Star Schema Warehouse:** Dimensional modeling for analytical queries.
-4. **Data Transformation:** Cleans and structures data with dbt.
-5. **Data Enrichment:** Applies YOLOv8 for object detection in images.
-6. **Analytical API:** Serves insights through FastAPI endpoints.
-7. **Orchestration:** Dagster manages the workflow and schedules.
+## Pipeline Overview
 
-## Getting Started
+The pipeline consists of the following steps:
 
-1. **Clone the repository**
+### Task 1: Telegram Data Scraping
+* Collect messages and images from public Telegram channels using Telethon.
+* Store data in **raw JSON files** in the data lake.
+* Run the scraper manually:
 
 ```bash
-git clone <repo-url>
-cd project-root
-```
+python scrapers/telegram_scraper.py
 
-2. **Set up environment variables** for Telegram API credentials.
+### Task 2: Load Raw Data to PostgreSQL
 
-3. **Install dependencies**
+* Load the raw JSON data into the PostgreSQL warehouse.
+* Apply basic cleaning and formatting during ingestion.
+* Run the loader:
+python data_lake/load_raw_to_postgres.py
 
-```bash
-pip install -r requirements.txt
-```
+### Task 4: Data Enrichment with YOLOv8
 
-4. **Run data scraping**
-
-```bash
-python data_lake/collect_telegram_data.py
-```
-
-5. **Run dbt transformations**
-
-```bash
-dbt run
-```
-
-6. **Run YOLOv8 enrichment**
-
-```bash
+* Apply object detection on images to extract visual insights.
+* Store detected objects as structured features in the warehouse.
+* Run YOLOv8 enrichment:
 python yolov8_enrichment/detect_objects.py
-```
 
-7. **Start FastAPI**
+### Task 5: Pipeline Orchestration with Dagster
 
-```bash
-uvicorn api.main:app --reload
-```
+* Automate the pipeline using Dagster.
+* Define operations (ops) for scraping, loading, transforming, and enrichment.
+* Example pipeline.py structure:
 
-## Next Steps
+from dagster import job, op
+import subprocess
 
-* Apply **YOLOv8 object detection** to all images.
-* Expand **API endpoints** for advanced analytical queries.
-* Implement **Dagster orchestration** for automated pipeline runs.
+@op
+def scrape_telegram_data():
+    subprocess.run(['python', 'scrapers/telegram_scraper.py'], check=True)
 
-## License
+@op
+def load_raw_to_postgres():
+    subprocess.run(['python', 'data_lake/load_raw_to_postgres.py'], check=True)
 
-MIT License
+@op
+def run_dbt_transformations():
+    subprocess.run(['dbt', 'run', '--project-dir', 'dbt_project'], check=True)
+
+@op
+def run_yolo_enrichment():
+    subprocess.run(['python', 'yolov8_enrichment/detect_objects.py'], check=True)
+
+@job
+def telegram_pipeline():
+    scrape = scrape_telegram_data()
+    load = load_raw_to_postgres()
+    dbt = run_dbt_transformations()
+    yolo = run_yolo_enrichment()
+
+    # Define execution order
+    load.after(scrape)
+    dbt.after(load)
+    yolo.after(dbt)
+
+* Launch Dagster UI and monitor runs:
+dagster dev -f dagster_pipeline/pipeline.py
+
+* Access the UI at http://localhost:3000.
+
+* Schedule daily runs and monitor pipeline logs.
