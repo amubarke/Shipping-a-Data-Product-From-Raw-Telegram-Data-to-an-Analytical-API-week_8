@@ -22,9 +22,8 @@ This project is an **end-to-end data pipeline** designed to extract, transform, 
 * **Pipeline Orchestration:** Dagster
 
 ## Project Structure
-
 project-root/
-├── data_lake/
+├── data/
 │ ├── raw/
 │ │ ├── telegram_messages/
 │ │ │ └── channel_name/YYYY_MM_DD.json
@@ -52,12 +51,9 @@ The pipeline consists of the following steps:
 * Collect messages and images from public Telegram channels using Telethon.
 * Store data in **raw JSON files** in the data lake.
 * Run the scraper manually:
-
-```bash
 python scrapers/telegram_scraper.py
 
 ### Task 2: Load Raw Data to PostgreSQL
-
 * Load the raw JSON data into the PostgreSQL warehouse.
 * Apply basic cleaning and formatting during ingestion.
 * Run the loader:
