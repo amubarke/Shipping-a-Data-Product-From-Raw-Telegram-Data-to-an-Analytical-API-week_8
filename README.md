@@ -22,6 +22,7 @@ This project is an **end-to-end data pipeline** designed to extract, transform, 
 * **Pipeline Orchestration:** Dagster
 
 ## Project Structure
+`````bash
 project-root/
 ├── data/
 │ ├── raw/
@@ -41,10 +42,8 @@ project-root/
 ├── scrapers/
 │ └── telegram_scraper.py
 └── README.md
-
-
+`````
 ## Pipeline Overview
-
 The pipeline consists of the following steps:
 
 ### Task 1: Telegram Data Scraping
@@ -98,7 +97,7 @@ def telegram_pipeline():
     load = load_raw_to_postgres()
     dbt = run_dbt_transformations()
     yolo = run_yolo_enrichment()
-    
+
 ```
 ### Define execution order
     load.after(scrape)
@@ -111,3 +110,4 @@ dagster dev -f dagster_pipeline/pipeline.py
 * Access the UI at http://localhost:3000.
 
 * Schedule daily runs and monitor pipeline logs.
+
